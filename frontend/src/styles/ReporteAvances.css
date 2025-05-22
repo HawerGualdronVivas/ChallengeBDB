@@ -1,0 +1,21 @@
+.reporte-section {
+  margin-bottom: 2rem;
+}
+
+.reporte-tabla {
+  width: 100%;
+  border-collapse: collapse;
+  margin-top: 1rem;
+}
+
+.reporte-tabla th,
+.reporte-tabla td {
+  border: 1px solid #ddd;
+  padding: 0.75rem;
+  text-align: left;
+}
+
+.reporte-tabla th {
+  background-color: #f1f3f5;
+  color: #14327d;
+}

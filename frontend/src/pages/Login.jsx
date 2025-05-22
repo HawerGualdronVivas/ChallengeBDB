@@ -1,6 +1,6 @@
 import { useState } from "react";
 import { useNavigate } from "react-router-dom";
-import API from "../api"; // Axios instancia con baseURL
+import API from "../api"; 
 import "../styles/LoginForm.css";
 import { FaUser, FaLock, FaSignInAlt } from "react-icons/fa";
 
@@ -18,29 +18,21 @@ const LoginForm = () => {
     setError("");
 
     try {
-      const res = await API.post("/login", {
-        email,
-        password,
-      });
+      const res = await API.post("/login", { email, password });
 
       const { rol } = res.data.user;
 
-      // Guardar datos en localStorage
+      // Guardar en localStorage
       localStorage.setItem("userRole", rol);
       localStorage.setItem("userEmail", res.data.user.email);
 
-      // Redireccionar según rol
-      if (rol === "practicante") {
-        navigate("/dashboard/practicante");
-      } else {
-        navigate("/dashboard/responsable");
-      }
+      navigate("/home");
     } catch (err) {
       console.error("Login error:", err);
       if (err.response?.status === 401) {
-        setError("❌ Credenciales inválidas");
+        setError("Credenciales inválidas");
       } else {
-        setError("⚠️ Error al conectar con el servidor");
+        setError("Error al conectar con el servidor");
       }
     } finally {
       setIsLoading(false);

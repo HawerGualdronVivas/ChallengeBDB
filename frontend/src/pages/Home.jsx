@@ -3,14 +3,14 @@ import { FaUserGraduate, FaClipboardList, FaChartBar, FaUserPlus } from "react-i
 import "../styles/Home.css"
 
 const Home = () => {
-  // Datos para las tarjetas de estadísticas (en una aplicación real, estos vendrían de una API)
+
   const stats = [
     { id: 1, title: "Practicantes Activos", count: 24, icon: <FaUserGraduate /> },
     { id: 2, title: "Avances Pendientes", count: 8, icon: <FaClipboardList /> },
     { id: 3, title: "Reportes Generados", count: 15, icon: <FaChartBar /> },
   ]
 
-  // Datos para las acciones rápidas
+
   const quickActions = [
     {
       id: 1,
@@ -76,7 +76,7 @@ const Home = () => {
           </div>
         </div>
         <div className="hero-image">
-          {/* En una aplicación real, aquí iría una imagen */}
+          {}
           <div className="placeholder-image">
             <FaUserGraduate size={120} color="#14327D" opacity={0.8} />
           </div>

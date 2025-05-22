@@ -37,7 +37,7 @@ const AvanceForm = () => {
         ...form,
         practicante_id: id
       });
-      setMensaje('Avance registrado con éxito ✅');
+      setMensaje('Avance registrado con éxito');
       setForm({ descripcion: '', fecha: '', retroalimentacion: '' });
       cargarAvances();
     } catch (error) {

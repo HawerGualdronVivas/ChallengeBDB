@@ -1,54 +1,101 @@
-import React, { useEffect, useState } from 'react';
-import API from '../api';
+import { useEffect, useState } from "react";
+import API from "../api";
+import "../styles/ReporteAvances.css";
 
 const ReporteAvances = () => {
   const [practicantes, setPracticantes] = useState([]);
-  const [avancesPorPracticante, setAvancesPorPracticante] = useState({});
+  const [avances, setAvances] = useState([]);
+  const [loading, setLoading] = useState(true);
 
   useEffect(() => {
-    cargarReporte();
+    const fetchData = async () => {
+      try {
+        const [resPracticantes, resAvances] = await Promise.all([
+          API.get("/practicantes"),
+          API.get("/avances"),
+        ]);
+
+        setPracticantes(resPracticantes.data);
+        setAvances(resAvances.data);
+      } catch (error) {
+        console.error("Error al cargar reportes:", error);
+      } finally {
+        setLoading(false);
+      }
+    };
+
+    fetchData();
   }, []);
 
-  const cargarReporte = async () => {
-    try {
-      const resPract = await API.get('/practicantes');
-      setPracticantes(resPract.data);
+  // Agrupar avances por practicante_id
+  const contarAvances = (practicanteId) =>
+    avances.filter((a) => a.practicante_id === practicanteId).length;
 
-      // Cargar avances por practicante
-      const avancesAgrupados = {};
-      for (const p of resPract.data) {
-        const resAvances = await API.get(`/avances/${p.id}`);
-        avancesAgrupados[p.id] = resAvances.data;
-      }
-
-      setAvancesPorPracticante(avancesAgrupados);
-    } catch (error) {
-      console.error('Error al cargar el reporte:', error);
-    }
-  };
+  const activos = practicantes.filter((p) => p.estado === "activo");
+  const finalizados = practicantes.filter((p) => p.estado === "finalizado");
 
   return (
-    <div>
-      <h2>Reporte de Avances por Practicantes</h2>
-      {practicantes.map((p) => (
-        <div key={p.id} style={{ marginBottom: '2rem', padding: '1rem', border: '1px solid #ccc' }}>
-          <h3>{p.nombre} ({p.programa})</h3>
-          <p><strong>Estado:</strong> {p.estado} | <strong>Responsable:</strong> {p.responsable}</p>
-          <h4>Avances:</h4>
-          <ul>
-            {(avancesPorPracticante[p.id] || []).map((a) => (
-              <li key={a.id}>
-                <strong>{a.fecha}</strong>: {a.descripcion}
-                <br />
-                <em>Retroalimentación:</em> {a.retroalimentacion || 'No asignada'}
-              </li>
-            ))}
-            {(!avancesPorPracticante[p.id] || avancesPorPracticante[p.id].length === 0) && (
-              <p style={{ fontStyle: 'italic' }}>Sin avances registrados</p>
-            )}
-          </ul>
+    <div className="registro-container">
+      <div className="registro-header">
+        <div className="registro-nav">
+          <a href="/" className="nav-link">Inicio</a>
+          <a href="/registro-practicante" className="nav-link">Registrar Practicante</a>
+          <a href="/practicantes" className="nav-link">Lista de Practicantes</a>
+          <a href="/reportes" className="nav-link active">Reportes</a>
         </div>
-      ))}
+      </div>
+
+      <div className="container">
+        <h1>Reporte General de Prácticas</h1>
+
+        {loading ? (
+          <p>Cargando datos...</p>
+        ) : (
+          <>
+            <section className="reporte-section">
+              <h2>Avances por Practicante</h2>
+              <table className="reporte-tabla">
+                <thead>
+                  <tr>
+                    <th>Nombre</th>
+                    <th>Programa</th>
+                    <th>Estado</th>
+                    <th>Total Avances</th>
+                  </tr>
+                </thead>
+                <tbody>
+                  {practicantes.map((p) => (
+                    <tr key={p.id}>
+                      <td>{p.nombre}</td>
+                      <td>{p.programa}</td>
+                      <td>{p.estado}</td>
+                      <td>{contarAvances(p.id)}</td>
+                    </tr>
+                  ))}
+                </tbody>
+              </table>
+            </section>
+
+            <section className="reporte-section">
+              <h2>Prácticas Activas</h2>
+              <ul>
+                {activos.map((p) => (
+                  <li key={p.id}>{p.nombre} – {p.programa}</li>
+                ))}
+              </ul>
+            </section>
+
+            <section className="reporte-section">
+              <h2>Prácticas Finalizadas</h2>
+              <ul>
+                {finalizados.map((p) => (
+                  <li key={p.id}>{p.nombre} – {p.programa}</li>
+                ))}
+              </ul>
+            </section>
+          </>
+        )}
+      </div>
     </div>
   );
 };

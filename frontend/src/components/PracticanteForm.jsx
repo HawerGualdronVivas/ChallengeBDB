@@ -1,150 +1,231 @@
-import React, { useState } from 'react';
-import API from '../api';
+import { useState } from "react";
+import { useNavigate } from "react-router-dom";
+import API from "../api";
+import "../styles/RegistroPracticanteForm.css";
+import { FaUser, FaGraduationCap, FaCalendarAlt, FaUserTie, FaSave, FaTimes } from "react-icons/fa";
 
 const PracticanteForm = () => {
-  const [form, setForm] = useState({
-    nombre: '',
-    programa: '',
-    fecha_ingreso: '',
-    estado: 'activo',
-    responsable: ''
+  const [formData, setFormData] = useState({
+    nombreCompleto: "",
+    programaAcademico: "",
+    fechaIngreso: "",
+    estado: "activo",
+    responsable: "",
+    email: "",
+    telefono: "",
+    observaciones: "",
   });
 
-  const [mensaje, setMensaje] = useState('');
+  const [errors, setErrors] = useState({});
   const [isLoading, setIsLoading] = useState(false);
+  const navigate = useNavigate();
 
   const handleChange = (e) => {
-    setForm({ ...form, [e.target.name]: e.target.value });
+    const { name, value } = e.target;
+    setFormData((prev) => ({
+      ...prev,
+      [name]: value,
+    }));
   };
 
   const handleSubmit = async (e) => {
     e.preventDefault();
     setIsLoading(true);
-    setMensaje('');
+
+    const newErrors = {};
+
+    if (!formData.nombreCompleto.trim()) newErrors.nombreCompleto = "El nombre es obligatorio";
+    if (!formData.programaAcademico) newErrors.programaAcademico = "Selecciona un programa";
+    if (!formData.fechaIngreso) newErrors.fechaIngreso = "La fecha de ingreso es obligatoria";
+    if (!formData.responsable.trim()) newErrors.responsable = "El responsable es obligatorio";
+
+    if (formData.email && !/^[\w-.]+@([\w-]+\.)+[\w-]{2,4}$/.test(formData.email)) {
+      newErrors.email = "Correo inválido";
+    }
+
+    if (formData.telefono && !/^\d{7,}$/.test(formData.telefono)) {
+      newErrors.telefono = "El teléfono debe tener al menos 7 dígitos numéricos";
+    }
+
+    setErrors(newErrors);
+
+    if (Object.keys(newErrors).length > 0) {
+      setIsLoading(false);
+      return;
+    }
+
     try {
-      await API.post('/practicantes', form);
-      setMensaje('✅ Practicante registrado con éxito');
-      setForm({
-        nombre: '',
-        programa: '',
-        fecha_ingreso: '',
-        estado: 'activo',
-        responsable: ''
-      });
+      const payload = {
+        nombre: formData.nombreCompleto,
+        programa: formData.programaAcademico,
+        fecha_ingreso: formData.fechaIngreso,
+        estado: formData.estado,
+        responsable: formData.responsable,
+        email: formData.email,
+        telefono: formData.telefono,
+        observaciones: formData.observaciones,
+      };
+
+      await API.post("/practicantes", payload);
+      alert("Practicante registrado exitosamente");
+      navigate("/practicantes");
     } catch (error) {
-      console.error(error);
-      setMensaje('❌ Error al registrar practicante');
+      console.error("Error al registrar practicante:", error);
+      alert("Error al registrar practicante. Intente nuevamente.");
     } finally {
       setIsLoading(false);
     }
   };
 
   return (
-    <div className="flex min-h-screen flex-col items-center justify-center bg-white p-4">
-      <div className="w-full max-w-md space-y-8">
-        <div className="text-center">
-          <h1 className="text-3xl font-bold tracking-tight" style={{ color: "#14327D" }}>
-            Registro de Practicantes
-          </h1>
-          <p className="mt-2 text-sm text-gray-600">Completa el formulario para registrar un nuevo practicante</p>
+    <div className="registro-container">
+      <div className="registro-header">
+        <div className="registro-nav">
+          <a href="/" className="nav-link">Inicio</a>
+          <a href="/registro-practicante" className="nav-link active">Registrar Practicante</a>
+          <a href="/practicantes" className="nav-link">Lista de Practicantes</a>
+          <a href="/reportes" className="nav-link">Reportes</a>
         </div>
+      </div>
 
-        <div className="rounded-lg border border-gray-200 bg-white shadow-sm">
-          <div className="p-6">
-            <h2 className="mb-4 text-xl font-semibold" style={{ color: "#14327D" }}>
-              Datos del practicante
-            </h2>
+      <div className="registro-content">
+        <div className="registro-card">
+          <div className="registro-card-header">
+            <h1>Registro de Practicantes</h1>
+            <p>Completa el formulario para registrar un nuevo practicante en el sistema</p>
+          </div>
 
-            {mensaje && <p className="mb-4 text-sm text-green-600">{mensaje}</p>}
-
-            <form onSubmit={handleSubmit} className="space-y-4">
-              <div className="space-y-2">
-                <label htmlFor="nombre" className="block text-sm font-medium text-gray-700">
-                  Nombre completo
-                </label>
+          <form onSubmit={handleSubmit} className="registro-form">
+            {/* Campo: Nombre completo */}
+            <div className="form-group">
+              <label>Nombre completo *</label>
+              <div className="input-with-icon">
+                <FaUser className="input-icon" />
                 <input
                   type="text"
-                  id="nombre"
-                  name="nombre"
-                  value={form.nombre}
+                  name="nombreCompleto"
+                  value={formData.nombreCompleto}
                   onChange={handleChange}
                   required
-                  className="w-full rounded-md border border-gray-300 px-3 py-2 text-sm focus:border-blue-500 focus:outline-none"
                 />
               </div>
+              {errors.nombreCompleto && <p className="error-text">{errors.nombreCompleto}</p>}
+            </div>
 
-              <div className="space-y-2">
-                <label htmlFor="programa" className="block text-sm font-medium text-gray-700">
-                  Programa académico
-                </label>
-                <input
-                  type="text"
-                  id="programa"
-                  name="programa"
-                  value={form.programa}
-                  onChange={handleChange}
-                  required
-                  className="w-full rounded-md border border-gray-300 px-3 py-2 text-sm focus:border-blue-500 focus:outline-none"
-                />
-              </div>
-
-              <div className="space-y-2">
-                <label htmlFor="fecha_ingreso" className="block text-sm font-medium text-gray-700">
-                  Fecha de ingreso
-                </label>
-                <input
-                  type="date"
-                  id="fecha_ingreso"
-                  name="fecha_ingreso"
-                  value={form.fecha_ingreso}
-                  onChange={handleChange}
-                  required
-                  className="w-full rounded-md border border-gray-300 px-3 py-2 text-sm focus:border-blue-500 focus:outline-none"
-                />
-              </div>
-
-              <div className="space-y-2">
-                <label htmlFor="estado" className="block text-sm font-medium text-gray-700">
-                  Estado de la práctica
-                </label>
+            {/* Campo: Programa académico */}
+            <div className="form-group">
+              <label>Programa académico *</label>
+              <div className="input-with-icon">
+                <FaGraduationCap className="input-icon" />
                 <select
-                  id="estado"
-                  name="estado"
-                  value={form.estado}
+                  name="programaAcademico"
+                  value={formData.programaAcademico}
                   onChange={handleChange}
-                  className="w-full rounded-md border border-gray-300 px-3 py-2 text-sm focus:border-blue-500 focus:outline-none"
+                  required
                 >
-                  <option value="activo">Activo</option>
-                  <option value="finalizado">Finalizado</option>
-                  <option value="en espera">En espera</option>
+                  <option value="">Seleccione un programa</option>
+                  <option value="Ingeniería Financiera">Ingeniería Financiera</option>
+                  <option value="Administración de Empresas">Administración de Empresas</option>
+                  <option value="Economía">Economía</option>
+                  <option value="Contaduría Pública">Contaduría Pública</option>
+                  <option value="Finanzas">Finanzas</option>
                 </select>
               </div>
+              {errors.programaAcademico && <p className="error-text">{errors.programaAcademico}</p>}
+            </div>
 
-              <div className="space-y-2">
-                <label htmlFor="responsable" className="block text-sm font-medium text-gray-700">
-                  Responsable de seguimiento
-                </label>
+            {/* Campo: Fecha de ingreso */}
+            <div className="form-group">
+              <label>Fecha de ingreso *</label>
+              <div className="input-with-icon">
+                <FaCalendarAlt className="input-icon" />
                 <input
-                  type="text"
-                  id="responsable"
-                  name="responsable"
-                  value={form.responsable}
+                  type="date"
+                  name="fechaIngreso"
+                  value={formData.fechaIngreso}
                   onChange={handleChange}
                   required
-                  className="w-full rounded-md border border-gray-300 px-3 py-2 text-sm focus:border-blue-500 focus:outline-none"
                 />
               </div>
+              {errors.fechaIngreso && <p className="error-text">{errors.fechaIngreso}</p>}
+            </div>
 
-              <button
-                type="submit"
-                disabled={isLoading}
-                className="w-full rounded-md py-2 text-sm font-medium text-white transition-colors hover:bg-opacity-90 focus:outline-none disabled:opacity-50"
-                style={{ backgroundColor: "#14327D" }}
+            {/* Campo: Estado */}
+            <div className="form-group">
+              <label>Estado de la práctica</label>
+              <select
+                name="estado"
+                value={formData.estado}
+                onChange={handleChange}
               >
-                {isLoading ? "Registrando..." : "Registrar Practicante"}
+                <option value="activo">Activo</option>
+                <option value="finalizado">Finalizado</option>
+                <option value="suspendido">Suspendido</option>
+                <option value="pendiente">Pendiente</option>
+              </select>
+            </div>
+
+            {/* Campo: Responsable */}
+            <div className="form-group">
+              <label>Responsable *</label>
+              <div className="input-with-icon">
+                <FaUserTie className="input-icon" />
+                <input
+                  type="text"
+                  name="responsable"
+                  value={formData.responsable}
+                  onChange={handleChange}
+                  required
+                />
+              </div>
+              {errors.responsable && <p className="error-text">{errors.responsable}</p>}
+            </div>
+
+            {/* Campo: Email */}
+            <div className="form-group">
+              <label>Correo electrónico</label>
+              <input
+                type="email"
+                name="email"
+                value={formData.email}
+                onChange={handleChange}
+              />
+              {errors.email && <p className="error-text">{errors.email}</p>}
+            </div>
+
+            {/* Campo: Teléfono */}
+            <div className="form-group">
+              <label>Teléfono</label>
+              <input
+                type="tel"
+                name="telefono"
+                value={formData.telefono}
+                onChange={handleChange}
+              />
+              {errors.telefono && <p className="error-text">{errors.telefono}</p>}
+            </div>
+
+            {/* Campo: Observaciones */}
+            <div className="form-group">
+              <label>Observaciones</label>
+              <textarea
+                name="observaciones"
+                rows="4"
+                value={formData.observaciones}
+                onChange={handleChange}
+              />
+            </div>
+
+            {/* Botones */}
+            <div className="form-actions">
+              <button type="button" className="btn-secondary" onClick={() => navigate("/practicantes")}>
+                <FaTimes /> Cancelar
               </button>
-            </form>
-          </div>
+              <button type="submit" className="btn-primary" disabled={isLoading}>
+                <FaSave /> {isLoading ? "Guardando..." : "Registrar Practicante"}
+              </button>
+            </div>
+          </form>
         </div>
       </div>
     </div>
